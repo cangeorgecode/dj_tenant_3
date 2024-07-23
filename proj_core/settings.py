@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-INSTALLED_APPS = [
+SHARED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,9 +38,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'django_tenants',
 ]
 
+TENANT_APPS = [
+    'client_app',
+]
+
+INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
+
 MIDDLEWARE = [
+    'django_tenants.middleware.main.TenantMainMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -76,11 +84,18 @@ WSGI_APPLICATION = 'proj_core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django_tenants.postgresql_backend',
+        'NAME': 'myproject',
+        'USER': 'postgresuser',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': 5432,
     }
 }
 
+DATABASE_ROUTERS = (
+    'django_tenants.routers.TenantSyncRouter',
+)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -122,3 +137,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+TENANT_MODEL = 'core.Client'
+TENANT_DOMAIN_MODEL = 'core.Domain'
+PUBLIC_SCHEMA_URLCONF = 'core.urls'
